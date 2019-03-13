@@ -6,8 +6,10 @@ package:
   exclude:
     - "**/*"
   include:
-    - ../**/*
-    - app.py
+     - app.py
+     - data/*
+#    - app.py
+     - predictor.py
 
 provider:
   name: aws

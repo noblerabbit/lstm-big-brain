@@ -18,18 +18,19 @@ from keras.layers import Dense
 from keras.layers import LSTM
 from keras.optimizers import RMSprop
 from keras.utils.data_utils import get_file
+from keras.preprocessing.sequence import pad_sequences
 import numpy as np
 import random
 import sys
 import io
 
 path = 'data/Tumpstweets_source.txt'
-model_file = 'model_data/lstm-big-brain-model.json'
-weights_file = 'model_data/lstm-big-brain_new.h5'
+model_file = 'model_data/lstm-big-brain-model_mxnet.json'
+weights_file = 'model_data/lstm-big-brain_new_mxnet.h5'
 
 with io.open(path, encoding='utf-8') as f:
     text = f.read().lower()
-    text = text[:1500000] # to fit my gpu
+    text = text[:1000000] # to fit my gpu
 print('corpus length:', len(text))
 
 chars = sorted(list(set(text)))
@@ -38,7 +39,7 @@ char_indices = dict((c, i) for i, c in enumerate(chars))
 indices_char = dict((i, c) for i, c in enumerate(chars))
 
 # cut the text in semi-redundant sequences of maxlen characters
-maxlen = 60
+maxlen = 40
 step = 3
 sentences = []
 next_chars = []
@@ -55,11 +56,13 @@ for i, sentence in enumerate(sentences):
         x[i, t, char_indices[char]] = 1
     y[i, char_indices[next_chars[i]]] = 1
 
+# keras-mxnet unrolling bug fix
+x = pad_sequences(x, maxlen=maxlen)
 
 # build the model: a single LSTM
 print('Build model...')
 model = Sequential()
-model.add(LSTM(128, input_shape=(maxlen, len(chars))))
+model.add(LSTM(128, input_shape=(maxlen, len(chars)), unroll=True))
 model.add(Dense(len(chars), activation='softmax'))
 
 optimizer = RMSprop(lr=0.01)
@@ -116,8 +119,8 @@ checkpointer = ModelCheckpoint(filepath=weights_file,
                                verbose=1, save_best_only=False)
 
 model.fit(x, y,
-          batch_size=2048,
-          epochs=300,
+          batch_size=256,
+          epochs=10,
           callbacks=[print_callback, checkpointer])
           
 # save model to JSON
