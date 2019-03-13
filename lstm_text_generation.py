@@ -29,7 +29,7 @@ weights_file = 'model_data/lstm-big-brain_new.h5'
 
 with io.open(path, encoding='utf-8') as f:
     text = f.read().lower()
-    text = text[:1000000] # to fit my gpu
+    text = text[:1500000] # to fit my gpu
 print('corpus length:', len(text))
 
 chars = sorted(list(set(text)))
@@ -38,7 +38,7 @@ char_indices = dict((c, i) for i, c in enumerate(chars))
 indices_char = dict((i, c) for i, c in enumerate(chars))
 
 # cut the text in semi-redundant sequences of maxlen characters
-maxlen = 40
+maxlen = 60
 step = 3
 sentences = []
 next_chars = []
@@ -63,7 +63,8 @@ model.add(LSTM(128, input_shape=(maxlen, len(chars))))
 model.add(Dense(len(chars), activation='softmax'))
 
 optimizer = RMSprop(lr=0.01)
-model.load_weights(weights_file)
+
+#  model.load_weights(weights_file)
 
 model.compile(loss='categorical_crossentropy', optimizer=optimizer)
 
@@ -116,7 +117,7 @@ checkpointer = ModelCheckpoint(filepath=weights_file,
 
 model.fit(x, y,
           batch_size=2048,
-          epochs=60,
+          epochs=300,
           callbacks=[print_callback, checkpointer])
           
 # save model to JSON
