@@ -7,9 +7,9 @@ from flask import Flask, jsonify
 import predictor
 
 
-path = 'data/tumpstweets_source.txt'
-model_file = 'data/mxnet_model.json'
-weights_file = 'data/mxnet_model_weights.h5'
+path = '../data/tumpstweets_source.txt'
+model_file = '../model_data/lstm-big-brain-model_mxnet.json'
+weights_file = '../model_data/lstm-big-brain_new_mxnet.h5'
 
 # init flask
 app = Flask(__name__)

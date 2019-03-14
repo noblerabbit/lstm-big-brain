@@ -1,6 +1,5 @@
 from keras.models import model_from_json
 from keras import backend
-# import tensorflow as tf
 import numpy as np
 import random
 import io
@@ -56,25 +55,25 @@ class TweetPredictor():
         tweets=[]
         
         start_index = random.randint(0, len(self.text) - self.maxlen - 1)
-        for diversity in [0.2, 0.5, 1.0, 1.2]:
-            print('----- diversity:', diversity)
+        diversity = [0.2, 0.5, 1.0, 1.2][random.randint(0,4)]
+        print('----- diversity:', diversity)
     
-            generated = ''
-            sentence = self.text[start_index: start_index + self.maxlen]
-            generated += sentence
-            print('----- Generating with seed: "' + sentence + '"')
+        generated = ''
+        sentence = self.text[start_index: start_index + self.maxlen]
+        generated += sentence
+        print('----- Generating with seed: "' + sentence + '"')
     
-            for i in range(160):
-                x_pred = np.zeros((1, self.maxlen, len(self.chars)))
-                for t, char in enumerate(sentence):
-                    x_pred[0, t, self.char_indices[char]] = 1.
-                preds = self.model.predict(x_pred, verbose=0)[0]
-                next_index = self.sample_(preds, diversity)
-                next_char = self.indices_char[next_index]
-                generated += next_char
-                sentence = sentence[1:] + next_char
+        for i in range(160):
+            x_pred = np.zeros((1, self.maxlen, len(self.chars)))
+            for t, char in enumerate(sentence):
+                x_pred[0, t, self.char_indices[char]] = 1.
+            preds = self.model.predict(x_pred, verbose=0)[0]
+            next_index = self.sample_(preds, diversity)
+            next_char = self.indices_char[next_index]
+            generated += next_char
+            sentence = sentence[1:] + next_char
     
-            tweets.append(generated)
+        tweets.append(generated)
         
         return tweets
         
