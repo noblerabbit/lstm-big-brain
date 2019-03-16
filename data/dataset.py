@@ -2,7 +2,7 @@ import io
 import numpy as np
 
 class TweetDataset():
-    def __init__(self,path,seqlength=40, data_size=0.1):
+    def __init__(self,path,seqlength=40, data_size=1):
         self.path = path
         self.char_to_ind = {}
         self.ind_to_char = {}
@@ -17,8 +17,8 @@ class TweetDataset():
     def load_source(self, data_size):
         with io.open(self.path, encoding='utf-8') as f:
             text = f.read()#.lower()
-            text = text[:int(len(text)*data_size)] # to fit my gpu
-        print('Corpus length: {} charaters.'.format(len(text))
+            text = text[:int(len(text)*data_size)] # to fit my ram
+        print('Corpus length: {} charaters.'.format(len(text)))
         chars = sorted(list(set(text)))
         print('Total chars:', len(chars))
         self.char_to_ind = {c:i for (i,c) in enumerate(chars)}
@@ -35,7 +35,8 @@ class TweetDataset():
             self.next_chars.append(self.text[i + maxlen])
         print("Sequences: ", len(self.sentences))
         
-    def vectorize_sequances(self):
+    def vectorize_all_sequances(self):
+        #if corpus is small enough to fit to memory
         print("Sequence Vectroization (one hot encoding)...", end = " ")
         x = np.zeros((len(self.sentences), self.maxlen, len(self.chars)), dtype='bool')
         # print(x.nbytes/10000000)
@@ -52,9 +53,29 @@ class TweetDataset():
         print(y.shape)
         return x, y
         
+    def get_batch(self, batch_size=2048):
+        counter = 0
+        #if corpus is too big to fit the memory, we yield batches
+        print("Sequence Vectroization (one hot encoding)...", end = " ")
+        x = np.zeros((batch_size, self.maxlen, len(self.chars)), dtype='bool')
+        y = np.zeros((batch_size, len(self.chars)), dtype='bool')
+    
+        for i, sentence in enumerate(self.sentences[:batch_size]):
+            # if i%100000 == 0:
+            #     # print(i)
+            for t, char in enumerate(sentence):
+                x[i, t, self.char_to_ind[char]] = 1
+            y[i, self.char_to_ind[self.next_chars[i]]] = 1
+        yield x, y
+        counter += batch_size
+
+        
+        
         
 if __name__ == "__main__":
     data = TweetDataset("tumpstweets_source.txt")
     data.create_sequances()
-    X, Y = data.vectorize_sequances()
-    print(data.chars)
+    X, Y = next(data.get_batch())
+    print((X.shape, Y.shape))
+    # X, Y = data.vectorize_all_sequances()
+    # print(data.chars)
