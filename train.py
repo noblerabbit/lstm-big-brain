@@ -5,13 +5,14 @@ import mxnet as mx
 import time
 import numpy as np
 from model.model import LSTMModel
+import random
 
 #path to source file
-path = "data/tumpstweets_source.txt"
+path = "data/nietzsche.txt"
 params = "lstm_basic.params"
 
-BATCH_SIZE = 2048
-EPOCHS = 4
+BATCH_SIZE = 4096
+EPOCHS = 100
 
 #load dataset
 data = TweetDataset(path, data_size=1)
@@ -36,18 +37,20 @@ trainer = gluon.Trainer(model.net.collect_params(), 'RMSProp', {'learning_rate':
 model.net_info()
 
 # train the model
+chunk_size = int(len(data.text)*1) # we load as much as we can in RAM
+STEPS_PER_EPOCH = int(len(data.text)/chunk_size)
+print("STEPS_PER_EPOCH : {}".format(STEPS_PER_EPOCH))
+
+X, Y = data.vectorize_all_sequances() # if dataset is small enough to fit in RAM
+
 for epoch in range(EPOCHS):
-    while True:
-        try:
-            X, Y = next(data.get_batch(int(len(data.text)*0.01)))
-        except:
-            print("Generator Ehusated. Going to next epoch.")
-            break
-        print(X.shape)
+    for step in range(STEPS_PER_EPOCH):
+        # X, Y = next(data.get_batch(chunk_size))
+        # print(X.shape)
         train_loss, train_acc, valid_acc = 0., 0., 0.
         tic = time.time()
         for i in range(0, X.shape[0]-BATCH_SIZE, BATCH_SIZE):
-            print(i)
+            # print(i)
             x_batch = nd.array(X[i: i + BATCH_SIZE,:,:], ctx=mx.gpu(0))
             y_batch = nd.array(Y[i: i + BATCH_SIZE,:], ctx=mx.gpu(0))
             with autograd.record():
@@ -56,11 +59,17 @@ for epoch in range(EPOCHS):
             loss.backward()
             trainer.step(BATCH_SIZE)
             train_loss += loss.mean().asscalar()
+        print("[INFO] Step {}: loss: {}, time: {} seconds.".format(step, train_loss/BATCH_SIZE, time.time()-tic))
+        print("[INFO] Predicting the text:")
+        # model.predict_text(X[random.randint(0, len(X))])
     #         print(train_loss)
-    print("Epoch {}: loss: {}, time: {} seconds.".format(epoch, train_loss, time.time()-tic))
+    print("[INFO] Epoch {}: loss: {}, time: {} seconds.".format(epoch, train_loss, time.time()-tic))
+    model.predict_text(X[random.randint(0, len(X))])
+
     
-# net.save_parameters(params)
+    
+model.net.save_parameters(params)
 
 
 #predict text
-model.predict_text(X[1000])
+# model.predict_text(X[1000])
