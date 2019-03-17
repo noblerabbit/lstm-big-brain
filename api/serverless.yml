@@ -7,9 +7,16 @@ package:
     - "**/*"
   include:
      - app.py
-     - data/*
-#    - app.py
-     - predictor.py
+     - textpredictor.py
+     - ../data/__init__.py
+    # - ../data/nietzsche.txt
+    # - ../lstm_basic.params
+     - ../data/dataset.py
+     - ../networks/**
+     - ../model/**
+     - static/**
+     - templates/**
+    # - predictor.py
 
 provider:
   name: aws
