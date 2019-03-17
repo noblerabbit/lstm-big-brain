@@ -1,7 +1,6 @@
 # This is where I can run the trained model and get predictions.
 # import keras
 import sys
-print(sys.path)
 import os
 #add root dir to pythonpath
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -11,6 +10,8 @@ from flask import Flask, jsonify
 from data.dataset import TweetDataset
 from networks.lstm_basic import lstm_basic
 from model.model import LSTMModel
+import random
+from flask import render_template
 
 
 
@@ -52,33 +53,37 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return jsonify({"message": "Hello World!"})
+    return render_template("one-tweet.html")
 
-@app.route("/predict", methods=["POST"])
+@app.route("/predict")
 def predict():
-        # initialize the data dictionary that will be returned from the
-    # view
-    data = {"success": False}
+    seed, generated = model.predict_text(seed_one_hot)
+    # data["seed"] = seed
+    # data["text"] = generated
     
-    # ensure an image was properly uploaded to our endpoint
-    if flask.request.method == "POST":
-        if flask.request.get_json():
-            seed = flask.request.get_json()['seed']
-            print(seed)
-            # global graph
-            # with graph.as_default():
-            seed, generated = model.predict_text(seed_one_hot)
-            data["seed"] = seed
-            data["text"] = generated
-            # indicate that the request was a success
-            data["success"] = True
+    #     # initialize the data dictionary that will be returned from the
+    # # view
+    # data = {"success": False}
+    
+    # # ensure an image was properly uploaded to our endpoint
+    # if flask.request.method == "POST":
+    #     if flask.request.get_json():
+    #         seed = flask.request.get_json()['seed']
+    #         print(seed)
+    #         # global graph
+    #         # with graph.as_default():
+    #         seed, generated = model.predict_text(seed_one_hot)
+    #         data["seed"] = seed
+    #         data["text"] = generated
+    #         # indicate that the request was a success
+    #         data["success"] = True
 
     # return json data back to client
-    return flask.jsonify(data)
+    return render_template("one-tweet.html", text=generated)
     
 
 
 if __name__ == "__main__":
     print("[INFO] Loading LSTM model and starting Flask API endpoint.")
     load_model()
-    app.run()
+    app.run(host='0.0.0.0')
