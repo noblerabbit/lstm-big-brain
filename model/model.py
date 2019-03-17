@@ -23,7 +23,7 @@ class LSTMModel():
         print(self.net)
         
     def initilize(self):
-        self.net.initialize(ctx=ctx)
+        self.net.initialize(ctx=self.ctx)
         
     def load_params(self, paramsfname):
         self.net.load_parameters(paramsfname, ctx=self.ctx)
@@ -50,7 +50,7 @@ class LSTMModel():
             char_vec = np.zeros(len(output[0]))
             char_vec[indice] = 1
             seed = np.vstack((seed, char_vec))[1:]
-        print(self.to_text(seed_one_hot),": ", text)
+        return (self.to_text(seed_one_hot), text)
         
     def to_text(self, one_hot_sentance):
         text = ''
